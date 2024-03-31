@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Chrome Samazon Book",
+  "name": "Samazon Book",
   "version": "0.1.0",
-  "description": "My Chrome Extension",
+  "description": "Summarize Amazon book information",
   "icons": {
     "16": "icons/icon_16.png",
     "32": "icons/icon_32.png",
@@ -13,21 +13,15 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Chrome Samazon Book",
+    "default_title": "Chrome SAmazon Book",
     "default_popup": "popup.html"
   },
-  "permissions": [
-    "storage"
-  ],
+  "permissions": ["activeTab", "tabs", "clipboardWrite"],
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
+      "matches": ["https://www.amazon.co.jp/*"],
       "run_at": "document_idle",
-      "js": [
-        "contentScript.js"
-      ]
+      "js": ["contentScript.js"]
     }
   ]
 }

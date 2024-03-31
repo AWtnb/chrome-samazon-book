@@ -1,44 +1,84 @@
 'use strict';
 
-// Content script file will run in the context of web page.
-// With content script you can manipulate the web pages using
-// Document Object Model (DOM).
-// You can also pass information to the parent extension.
+const getAuthorInfo = (): string[] => {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '#bylineInfo .author > .a-link-normal'
+    )
+  )
+    .map((el) => el.innerText)
+    .filter((s) => s.length);
+};
 
-// We execute this script by making an entry in manifest.json file
-// under `content_scripts` property
-
-// For more information on Content Scripts,
-// See https://developer.chrome.com/extensions/content_scripts
-
-// Log `title` of current active web page
-const pageTitle: string =
-  document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
-
-// Communicate with background file by sending a message
-chrome.runtime.sendMessage(
-  {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
-  },
-  (response) => {
-    console.log(response.message);
+const getCoverImageSrc = (): string => {
+  const elem = document.getElementById('landingImage');
+  if (!elem) {
+    return '';
   }
-);
+  return elem.getAttribute('data-old-hires') || '';
+};
 
-// Listen for message
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
+const checkBookPage = (): boolean => {
+  const elem = document.getElementById('richProductInformation_feature_div');
+  return elem !== null;
+};
+
+class RequestFromPopup {
+  private readonly type: string;
+  constructor(type: string) {
+    this.type = type;
   }
 
-  // Send an empty response
-  // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
-  sendResponse({});
-  return true;
+  checkType(s: string): boolean {
+    return s === this.type;
+  }
+
+  reply(content: string) {
+    chrome.runtime.sendMessage({
+      payload: {
+        type: this.type,
+        content: content,
+      },
+      isBook: checkBookPage(),
+    });
+  }
+}
+
+chrome.runtime.onMessage.addListener((request) => {
+  if (document.readyState !== 'complete') {
+    return;
+  }
+
+  const req = new RequestFromPopup(request.type);
+  if (req.checkType('page-type-check')) {
+    chrome.runtime.sendMessage({
+      isBook: checkBookPage(),
+    });
+    return;
+  }
+
+  if (req.checkType('title')) {
+    const content = document.getElementById('productTitle')?.innerText || '';
+    req.reply(content);
+    return;
+  }
+
+  if (req.checkType('detail')) {
+    const content = document.querySelector<HTMLElement>(
+      '#detailBullets_feature_div ul'
+    )!.innerHTML;
+    req.reply(content);
+    return;
+  }
+
+  if (req.checkType('author-info')) {
+    const content = getAuthorInfo().join('・');
+    req.reply(content);
+    return;
+  }
+
+  if (req.checkType('cover-image')) {
+    req.reply(getCoverImageSrc());
+    return;
+  }
 });

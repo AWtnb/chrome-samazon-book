@@ -2,111 +2,65 @@
 
 import './popup.css';
 
-(function () {
-  // We will make use of Storage API to get and store `count` value
-  // More information on Storage API can we found at
-  // https://developer.chrome.com/extensions/storage
+const requestToActiveTab = (requestName: string) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    if (!tab.id) {
+      return;
+    }
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: requestName,
+      },
+      () => {}
+    );
+  });
+};
 
-  // To get storage access, we have to mention it in `permissions` property of manifest.json file
-  // More information on Permissions can we found at
-  // https://developer.chrome.com/extensions/declare_permissions
-  const counterStorage = {
-    get: (cb: (count: number) => void) => {
-      chrome.storage.sync.get(['count'], (result) => {
-        cb(result.count);
-      });
-    },
-    set: (value: number, cb: () => void) => {
-      chrome.storage.sync.set(
-        {
-          count: value,
-        },
-        () => {
-          cb();
-        }
-      );
-    },
+requestToActiveTab('title');
+requestToActiveTab('detail');
+requestToActiveTab('author-info');
+requestToActiveTab('cover-image');
+requestToActiveTab('page-type-check');
+
+const setStatusById = (id: string, status: string) => {
+  document.getElementById(id)?.setAttribute('status', status);
+};
+
+type Payload = {
+  type: string;
+  content: string;
+};
+
+chrome.runtime.onMessage.addListener((request) => {
+  if (!request) {
+    return;
+  }
+
+  setStatusById('waiting', 'hide');
+  if (!request.isBook) {
+    setStatusById('warning', 'visible');
+    return;
+  }
+
+  const payload: Payload = {
+    type: request.payload.type,
+    content: request.payload.content,
   };
 
-  function setupCounter(initialValue = 0) {
-    document.getElementById('counter')!.innerHTML = initialValue.toString();
+  setStatusById('app', 'visible');
 
-    document.getElementById('incrementBtn')!.addEventListener('click', () => {
-      updateCounter({
-        type: 'INCREMENT',
-      });
-    });
-
-    document.getElementById('decrementBtn')!.addEventListener('click', () => {
-      updateCounter({
-        type: 'DECREMENT',
-      });
-    });
+  if (payload.type === 'detail') {
+    const elem = document.createElement('div');
+    elem.innerHTML = payload.content;
+    document.getElementById('to-be-replaced')!.replaceWith(elem);
+    return;
   }
 
-  function updateCounter({ type }: { type: string }) {
-    counterStorage.get((count: number) => {
-      let newCount: number;
-
-      if (type === 'INCREMENT') {
-        newCount = count + 1;
-      } else if (type === 'DECREMENT') {
-        newCount = count - 1;
-      } else {
-        newCount = count;
-      }
-
-      counterStorage.set(newCount, () => {
-        document.getElementById('counter')!.innerHTML = newCount.toString();
-
-        // Communicate with content script of
-        // active tab by sending a message
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          const tab = tabs[0];
-
-          chrome.tabs.sendMessage(
-            tab.id!,
-            {
-              type: 'COUNT',
-              payload: {
-                count: newCount,
-              },
-            },
-            (response) => {
-              console.log('Current count value passed to contentScript file');
-            }
-          );
-        });
-      });
-    });
+  if (payload.type === 'cover-image') {
+    document.getElementById(payload.type)!.setAttribute('src', payload.content);
+    return;
   }
-
-  function restoreCounter() {
-    // Restore count value
-    counterStorage.get((count: number) => {
-      if (typeof count === 'undefined') {
-        // Set counter value as 0
-        counterStorage.set(0, () => {
-          setupCounter(0);
-        });
-      } else {
-        setupCounter(count);
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', restoreCounter);
-
-  // Communicate with background file by sending a message
-  chrome.runtime.sendMessage(
-    {
-      type: 'GREETINGS',
-      payload: {
-        message: 'Hello, my name is Pop. I am from Popup.',
-      },
-    },
-    (response) => {
-      console.log(response.message);
-    }
-  );
-})();
+  document.getElementById(payload.type)!.innerText = payload.content;
+});

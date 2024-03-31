@@ -1,7 +1,7 @@
 {
-  "name": "chrome-samazon-book",
+  "name": "samazon-book",
   "version": "0.1.0",
-  "description": "My Chrome Extension",
+  "description": "Summarize Amazon book information",
   "private": true,
   "scripts": {
     "watch": "webpack --mode=development --watch --config config/webpack.config.js",
