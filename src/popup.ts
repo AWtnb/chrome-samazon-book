@@ -1,6 +1,7 @@
 'use strict';
 
 import './popup.css';
+import { Request } from './contentScript';
 
 const requestToActiveTab = (requestName: string) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -18,49 +19,40 @@ const requestToActiveTab = (requestName: string) => {
   });
 };
 
+requestToActiveTab('page-type-check');
 requestToActiveTab('title');
 requestToActiveTab('detail');
 requestToActiveTab('author-info');
 requestToActiveTab('cover-image');
-requestToActiveTab('page-type-check');
-
-const setStatusById = (id: string, status: string) => {
-  document.getElementById(id)?.setAttribute('status', status);
-};
-
-type Payload = {
-  type: string;
-  content: string;
-};
 
 chrome.runtime.onMessage.addListener((request) => {
-  if (!request) {
+  if (!request.type || !request.payload) {
     return;
   }
 
-  setStatusById('waiting', 'hide');
-  if (!request.isBook) {
-    setStatusById('warning', 'visible');
+  const req = new Request(request.type, request.payload);
+
+  if (req.type === 'page-type-answer') {
+    if (req.payload === 'book-page') {
+      document.getElementById('default')!.classList.add('hidden');
+      document.getElementById('app')!.classList.remove('hidden');
+      return;
+    }
+    document.getElementById('default')!.innerText =
+      'この商品は書籍ではありません';
     return;
   }
 
-  const payload: Payload = {
-    type: request.payload.type,
-    content: request.payload.content,
-  };
-
-  setStatusById('app', 'visible');
-
-  if (payload.type === 'detail') {
+  if (req.type === 'detail') {
     const elem = document.createElement('div');
-    elem.innerHTML = payload.content;
+    elem.innerHTML = req.payload;
     document.getElementById('to-be-replaced')!.replaceWith(elem);
     return;
   }
 
-  if (payload.type === 'cover-image') {
-    document.getElementById(payload.type)!.setAttribute('src', payload.content);
+  if (req.type === 'cover-image') {
+    document.getElementById(req.type)!.setAttribute('src', req.payload);
     return;
   }
-  document.getElementById(payload.type)!.innerText = payload.content;
+  if (req.payload) document.getElementById(req.type)!.innerText = req.payload;
 });
