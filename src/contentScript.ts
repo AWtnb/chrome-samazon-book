@@ -101,7 +101,7 @@ chrome.runtime.onMessage.addListener((request) => {
     if (!elem) {
       return '';
     }
-    const content = elem.innerHTML;
+    const content = elem.outerHTML;
     req.replyWith(content);
     return;
   }

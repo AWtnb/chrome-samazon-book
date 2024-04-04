@@ -1,19 +1,32 @@
-#waiting,
-#warning {
+@import '../node_modules/picnic/picnic.min.css';
+
+h1 {
+  font-size: 1.25em;
+}
+
+#default {
   width: 400px;
+  padding: 4px;
 }
 #app {
   width: 700px;
-  height: 500px;
 }
 #info {
-  height: 40%;
+  padding: 4px;
+  font-size: 14px;
+}
+#info ul {
+  max-height: 240px;
+  overflow: auto;
+}
+#info button {
+  width: 100%;
 }
 #img-container {
   overflow: auto;
-  height: 60%;
+  max-height: 280px;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }

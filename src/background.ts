@@ -7,7 +7,7 @@
 const isTargetPage = (url: string): boolean => {
   const targets = ['https://www.amazon.co.jp/', 'https://www.amazon.com/'];
   const found = targets.filter((u) => {
-    return url.startsWith(u);
+    return url.startsWith(u) && url.indexOf('/dp/') != -1;
   });
   return 0 < found.length;
 };
