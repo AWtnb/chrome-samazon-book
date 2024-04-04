@@ -3,11 +3,19 @@
  * https://geniusium.hatenablog.com/entry/2023/05/04/082017
  */
 'use strict';
-const TARGET = 'https://www.amazon.co.jp/';
 
-const updateConfig = (isTarget: boolean) => {
-  const popupPath = isTarget ? './popup.html' : '';
-  const iconPath = isTarget
+const isTargetPage = (url: string): boolean => {
+  const targets = ['https://www.amazon.co.jp/', 'https://www.amazon.com/'];
+  const found = targets.filter((u) => {
+    return url.startsWith(u);
+  });
+  return 0 < found.length;
+};
+
+const updateConfig = (url: string) => {
+  const flag = isTargetPage(url);
+  const popupPath = flag ? './popup.html' : '';
+  const iconPath = flag
     ? './icons/cremesoda01_128.png'
     : './icons/icon_128.png';
   chrome.action.setPopup({ popup: popupPath }).then(() => {
@@ -20,7 +28,7 @@ chrome.tabs.onActivated.addListener((activeInfo: chrome.tabs.TabActiveInfo) => {
     if (!tab.url) {
       return;
     }
-    updateConfig(tab.url.startsWith(TARGET));
+    updateConfig(tab.url);
   });
 });
 
@@ -29,6 +37,6 @@ chrome.tabs.onUpdated.addListener(
     if (!tab.active || !change.url || !tab.url) {
       return;
     }
-    updateConfig(tab.url.startsWith(TARGET));
+    updateConfig(tab.url);
   }
 );

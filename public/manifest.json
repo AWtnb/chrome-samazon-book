@@ -19,7 +19,10 @@
   "permissions": ["activeTab", "tabs", "clipboardWrite"],
   "content_scripts": [
     {
-      "matches": ["https://www.amazon.co.jp/*"],
+      "matches": [
+        "https://www.amazon.co.jp/*",
+        "https://www.amazon.com/*"
+    ],
       "run_at": "document_idle",
       "js": ["contentScript.js"]
     }

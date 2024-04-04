@@ -9,13 +9,10 @@ const requestToActiveTab = (requestName: string) => {
     if (!tab.id) {
       return;
     }
-    chrome.tabs.sendMessage(
-      tab.id,
-      {
-        type: requestName,
-      },
-      () => {}
-    );
+    chrome.tabs.sendMessage(tab.id, {
+      type: requestName,
+      payload: 'greeting-for-tab',
+    });
   });
 };
 
@@ -24,6 +21,7 @@ requestToActiveTab('title');
 requestToActiveTab('detail');
 requestToActiveTab('author-info');
 requestToActiveTab('cover-image');
+requestToActiveTab('search-info');
 
 chrome.runtime.onMessage.addListener((request) => {
   if (!request.type || !request.payload) {
@@ -54,5 +52,15 @@ chrome.runtime.onMessage.addListener((request) => {
     document.getElementById(req.type)!.setAttribute('src', req.payload);
     return;
   }
+
+  if (req.type === 'search-info') {
+    document.getElementById(req.type)!.addEventListener('click', () => {
+      const to =
+        'http://www.google.co.jp/search?q=' + encodeURIComponent(req.payload);
+      window.open(to, '_blank');
+    });
+    return;
+  }
+
   if (req.payload) document.getElementById(req.type)!.innerText = req.payload;
 });
