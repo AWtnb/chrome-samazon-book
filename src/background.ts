@@ -4,10 +4,12 @@
  */
 'use strict';
 
+import { requestToContentScript, BackgroundInfo, ContentInfo } from './helper';
+
 const isTargetPage = (url: string): boolean => {
   const targets = ['https://www.amazon.co.jp/', 'https://www.amazon.com/'];
-  const found = targets.filter((u) => {
-    return url.startsWith(u) && url.indexOf('/dp/') != -1;
+  const found = targets.filter((target) => {
+    return url.startsWith(target) && url.indexOf('/dp/') != -1;
   });
   return 0 < found.length;
 };
@@ -15,12 +17,11 @@ const isTargetPage = (url: string): boolean => {
 const updateConfig = (url: string) => {
   const flag = isTargetPage(url);
   const popupPath = flag ? './popup.html' : '';
-  const iconPath = flag
-    ? './icons/cremesoda01_128.png'
-    : './icons/icon_128.png';
-  chrome.action.setPopup({ popup: popupPath }).then(() => {
-    // chrome.action.setIcon({ path: iconPath });
-  });
+  chrome.action.setIcon({ path: './icons/book_128_gray.png' });
+  chrome.action.setPopup({ popup: popupPath });
+  if (flag) {
+    requestToContentScript(BackgroundInfo.CheckForIcon);
+  }
 };
 
 chrome.tabs.onActivated.addListener((activeInfo: chrome.tabs.TabActiveInfo) => {
@@ -40,3 +41,24 @@ chrome.tabs.onUpdated.addListener(
     updateConfig(tab.url);
   }
 );
+
+chrome.runtime.onMessage.addListener((request) => {
+  if (
+    (request.type === 'dom-loading-status' &&
+      request.payload === 'completed') ||
+    (request.type === BackgroundInfo.AnswerForIcon &&
+      request.payload === ContentInfo.BookPage)
+  ) {
+    chrome.action.setIcon({
+      path: './icons/book_128.png',
+    });
+    return;
+  }
+
+  if (request.type === 'answer-for-icon' && request.payload !== 'book-page') {
+    chrome.action.setIcon({
+      path: './icons/book_128_gray.png',
+    });
+    return;
+  }
+});

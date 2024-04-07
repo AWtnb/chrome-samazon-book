@@ -1,27 +1,19 @@
 'use strict';
 
 import './popup.css';
-import { Request } from './contentScript';
+import {
+  Request,
+  PopupInfo,
+  ContentInfo,
+  requestToContentScript,
+} from './helper';
 
-const requestToActiveTab = (requestName: string) => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const tab = tabs[0];
-    if (!tab.id) {
-      return;
-    }
-    chrome.tabs.sendMessage(tab.id, {
-      type: requestName,
-      payload: 'greeting-for-tab',
-    });
-  });
-};
-
-requestToActiveTab('page-type-check');
-requestToActiveTab('title');
-requestToActiveTab('detail');
-requestToActiveTab('author-info');
-requestToActiveTab('cover-image');
-requestToActiveTab('search-info');
+requestToContentScript(PopupInfo.PageTypeCheck);
+requestToContentScript(PopupInfo.Title);
+requestToContentScript(PopupInfo.Detail);
+requestToContentScript(PopupInfo.AuthorInfo);
+requestToContentScript(PopupInfo.CoverImage);
+requestToContentScript(PopupInfo.SearchInfo);
 
 chrome.runtime.onMessage.addListener((request) => {
   if (!request.type || !request.payload) {
@@ -30,8 +22,8 @@ chrome.runtime.onMessage.addListener((request) => {
 
   const req = new Request(request.type, request.payload);
 
-  if (req.type === 'page-type-answer') {
-    if (req.payload === 'book-page') {
+  if (req.type === ContentInfo.PageTypeAnswer) {
+    if (req.payload === ContentInfo.BookPage) {
       document.getElementById('default')!.classList.add('hidden');
       document.getElementById('app')!.classList.remove('hidden');
       return;
@@ -41,19 +33,19 @@ chrome.runtime.onMessage.addListener((request) => {
     return;
   }
 
-  if (req.type === 'detail') {
+  if (req.type === PopupInfo.Detail) {
     const elem = document.createElement('div');
     elem.innerHTML = req.payload;
     document.getElementById('to-be-replaced')!.replaceWith(elem);
     return;
   }
 
-  if (req.type === 'cover-image') {
+  if (req.type === PopupInfo.CoverImage) {
     document.getElementById(req.type)!.setAttribute('src', req.payload);
     return;
   }
 
-  if (req.type === 'search-info') {
+  if (req.type === PopupInfo.SearchInfo) {
     document.getElementById(req.type)!.addEventListener('click', () => {
       const to =
         'http://www.google.co.jp/search?q=' + encodeURIComponent(req.payload);

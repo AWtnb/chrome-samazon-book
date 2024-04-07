@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "description": "Summarize Amazon book information",
   "icons": {
-    "16": "icons/icon_16.png",
-    "32": "icons/icon_32.png",
-    "48": "icons/icon_48.png",
-    "128": "icons/icon_128.png"
+    "16": "icons/book_16.png",
+    "32": "icons/book_32.png",
+    "48": "icons/book_48.png",
+    "128": "icons/book_128.png"
   },
   "background": {
     "service_worker": "background.js"
@@ -16,7 +16,7 @@
     "default_title": "Chrome SAmazon Book",
     "default_popup": "popup.html"
   },
-  "permissions": ["activeTab", "tabs", "clipboardWrite"],
+  "permissions": ["activeTab", "tabs"],
   "content_scripts": [
     {
       "matches": [

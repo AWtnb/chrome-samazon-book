@@ -1,4 +1,12 @@
 'use strict';
+import {
+  Request,
+  sendRuntimeMessage,
+  MessageTo,
+  PopupInfo,
+  ContentInfo,
+  BackgroundInfo
+} from './helper';
 
 const getDetailListElem = (): HTMLElement | null => {
   return document.querySelector<HTMLElement>('#detailBullets_feature_div ul');
@@ -38,33 +46,12 @@ const getCoverImageSrc = (): string => {
   if (!elem) {
     return '';
   }
-  return elem.getAttribute('data-old-hires') || '';
+  const fullImg = elem.getAttribute('data-old-hires');
+  if (fullImg) {
+    return fullImg;
+  }
+  return elem.getAttribute('src') || '';
 };
-
-const sendRuntimeMessage = (type: string, payload: string) => {
-  chrome.runtime.sendMessage({
-    type: type,
-    payload: payload,
-  });
-};
-
-export class Request {
-  private _type: string;
-  private _payload: string;
-  constructor(type: string, payload: string) {
-    this._type = type;
-    this._payload = payload;
-  }
-  get type(): string {
-    return this._type;
-  }
-  get payload(): string {
-    return this._payload;
-  }
-  replyWith(payload: string) {
-    sendRuntimeMessage(this._type, payload);
-  }
-}
 
 chrome.runtime.onMessage.addListener((request) => {
   if (!request.type || request.payload !== 'greeting-for-tab') {
@@ -76,13 +63,19 @@ chrome.runtime.onMessage.addListener((request) => {
 
   const req = new Request(request.type, request.payload);
 
-  if (req.type === 'page-type-check') {
-    const payload = checkBookPage() ? 'book-page' : 'non-book-page';
-    sendRuntimeMessage('page-type-answer', payload);
+  if (req.type === BackgroundInfo.CheckForIcon) {
+    const payload = checkBookPage() ? ContentInfo.BookPage : ContentInfo.NonBookPage;
+    sendRuntimeMessage(MessageTo.background, BackgroundInfo.AnswerForIcon, payload);
     return;
   }
 
-  if (req.type === 'search-info') {
+  if (req.type === PopupInfo.PageTypeCheck) {
+    const payload = checkBookPage() ? ContentInfo.BookPage : ContentInfo.NonBookPage;
+    sendRuntimeMessage(MessageTo.popup, ContentInfo.PageTypeAnswer, payload);
+    return;
+  }
+
+  if (req.type === PopupInfo.SearchInfo) {
     const title = getBookTitle();
     const publisher = getPublisher();
     const content = publisher + ' ' + title;
@@ -90,13 +83,13 @@ chrome.runtime.onMessage.addListener((request) => {
     return;
   }
 
-  if (req.type === 'title') {
+  if (req.type === PopupInfo.Title) {
     const content = getBookTitle();
     req.replyWith(content);
     return;
   }
 
-  if (req.type === 'detail') {
+  if (req.type === PopupInfo.Detail) {
     const elem = getDetailListElem();
     if (!elem) {
       return '';
@@ -106,15 +99,23 @@ chrome.runtime.onMessage.addListener((request) => {
     return;
   }
 
-  if (req.type === 'author-info') {
+  if (req.type === PopupInfo.AuthorInfo) {
     const content = getAuthorInfo().join('・');
     req.replyWith(content);
     return;
   }
 
-  if (req.type === 'cover-image') {
+  if (req.type === PopupInfo.CoverImage) {
     const content = getCoverImageSrc();
     req.replyWith(content);
     return;
   }
 });
+
+const observer = new MutationObserver(() => {
+  if (checkBookPage()) {
+    sendRuntimeMessage(MessageTo.content, 'dom-loading-status', 'completed');
+    observer.disconnect();
+  }
+});
+observer.observe(document, { childList: true, subtree: true });
