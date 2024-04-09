@@ -10,7 +10,7 @@ h1 {
 }
 #app {
   width: 700px;
-  height: 600px;
+  height: 580px;
   padding: 4px;
   display: flex;
   flex-direction: column;
