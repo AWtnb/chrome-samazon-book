@@ -10,21 +10,26 @@ h1 {
 }
 #app {
   width: 700px;
-}
-#info {
+  height: 600px;
   padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+#author-info {
+  font-size: 16px;
+}
+#detail ul {
+  columns: 2;
   font-size: 14px;
 }
-#info ul {
-  max-height: 240px;
-  overflow: auto;
-}
-#info button {
+
+button {
   width: 100%;
 }
+
 #img-container {
   overflow: auto;
-  max-height: 280px;
+  flex: 1;
 }
 
 .hidden {

@@ -54,5 +54,10 @@ chrome.runtime.onMessage.addListener((request) => {
     return;
   }
 
-  if (req.payload) document.getElementById(req.type)!.innerText = req.payload;
+  if (req.payload) {
+    const elem = document.getElementById(req.type);
+    if (elem) {
+      elem.innerText = req.payload;
+    }
+  }
 });
