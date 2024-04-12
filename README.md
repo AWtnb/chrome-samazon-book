@@ -1,19 +1,7 @@
-# <img src="public/icons/icon_48.png" width="45" align="left"> Chrome Samazon Book
+# README - Chrome Samazon Book
 
-My Chrome Extension
+Summarize Amazon Book Information.
 
-## Features
-
-- Feature 1
-- Feature 2
-
-## Install
-
-[**Chrome** extension]() <!-- TODO: Add chrome extension link inside parenthesis -->
-
-## Contribution
-
-Suggestions and pull requests are welcomed!.
 
 ---
 
