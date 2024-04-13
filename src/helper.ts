@@ -24,10 +24,18 @@ export const requestToContentScript = (requestName: string) => {
     if (!tab.id) {
       return;
     }
-    chrome.tabs.sendMessage(tab.id, {
-      type: requestName,
-      payload: 'greeting-for-tab',
-    });
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: requestName,
+        payload: 'greeting-for-tab',
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.log('something happened: ', chrome.runtime.lastError.message);
+        }
+      }
+    );
   });
 };
 
@@ -42,11 +50,18 @@ export const sendRuntimeMessage = (
   type: string,
   payload: string
 ) => {
-  chrome.runtime.sendMessage({
-    to: to,
-    type: type,
-    payload: payload,
-  });
+  chrome.runtime.sendMessage(
+    {
+      to: to,
+      type: type,
+      payload: payload,
+    },
+    () => {
+      if (chrome.runtime.lastError) {
+        console.log('something happened: ', chrome.runtime.lastError.message);
+      }
+    }
+  );
 };
 
 export class Request {
