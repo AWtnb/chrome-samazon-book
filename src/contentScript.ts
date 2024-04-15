@@ -5,7 +5,7 @@ import {
   MessageTo,
   PopupInfo,
   ContentInfo,
-  BackgroundInfo
+  BackgroundInfo,
 } from './helper';
 
 const getDetailListElem = (): HTMLElement | null => {
@@ -46,11 +46,11 @@ const getCoverImageSrc = (): string => {
   if (!elem) {
     return '';
   }
-  const fullImg = elem.getAttribute('data-old-hires');
-  if (fullImg) {
-    return fullImg;
+  const thunmb = elem.getAttribute('src');
+  if (!thunmb) {
+    return '';
   }
-  return elem.getAttribute('src') || '';
+  return thunmb.substring(0, 47) + '.' + thunmb.split('.').slice(-1)[0];
 };
 
 chrome.runtime.onMessage.addListener((request) => {
@@ -64,13 +64,21 @@ chrome.runtime.onMessage.addListener((request) => {
   const req = new Request(request.type, request.payload);
 
   if (req.type === BackgroundInfo.CheckForIcon) {
-    const payload = checkBookPage() ? ContentInfo.BookPage : ContentInfo.NonBookPage;
-    sendRuntimeMessage(MessageTo.background, BackgroundInfo.AnswerForIcon, payload);
+    const payload = checkBookPage()
+      ? ContentInfo.BookPage
+      : ContentInfo.NonBookPage;
+    sendRuntimeMessage(
+      MessageTo.background,
+      BackgroundInfo.AnswerForIcon,
+      payload
+    );
     return;
   }
 
   if (req.type === PopupInfo.PageTypeCheck) {
-    const payload = checkBookPage() ? ContentInfo.BookPage : ContentInfo.NonBookPage;
+    const payload = checkBookPage()
+      ? ContentInfo.BookPage
+      : ContentInfo.NonBookPage;
     sendRuntimeMessage(MessageTo.popup, ContentInfo.PageTypeAnswer, payload);
     return;
   }
